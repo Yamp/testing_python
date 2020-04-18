@@ -1,3 +1,6 @@
+import json
+from typing import List
+
 from tools import StrTools
 import statistics
 
@@ -12,7 +15,7 @@ def arrToStr(arr, sep=',', funcForStr=None) -> str:
 
 def empty(arr) -> bool:
     """Проверка на пустой маасив"""
-    return False if arr else True
+    return len(arr) == 0
 
 
 def notEmpty(arr) -> bool:
@@ -22,23 +25,24 @@ def notEmpty(arr) -> bool:
 
 def arrToStrArr(arr, funcForStr=None):
     """Массив чисел и т.п. привести к массиву строк"""
-    f = str if funcForStr == None else funcForStr
+    f = str if funcForStr is None else funcForStr
     return [f(item) for item in arr]
 
 
-def strArrToDigArr(arr):
+def strArrToDigArr(arr: List[str]) -> List[int]:
     """Массив строк из чисел привести к массиву чисел"""
-    return [eval(item) for item in arr]
+    # TODO: использовать eval — плохая идея
+    return [int(item) for item in arr]
 
 
-def strArrFromString(str: str, sep: str = ','):
+def strArrFromString(s: str, sep: str = ','):
     """Массив строк от строки, в которой значения перечислены через разделитель"""
-    return str.split(sep)
+    return s.split(sep)
 
 
-def digArrFromString(str: str, sep: str = ','):
+def digArrFromString(s: str, sep: str = ','):
     """Массив чисел от строки, в которой значения перечислены через разделитель"""
-    return [eval(item) for item in str.split(sep)]
+    return [int(item) for item in s.split(sep)]
 
 
 def maxLineLength(arr) -> int:
@@ -65,7 +69,7 @@ def indexInArr(arr, v):
     """Номер элемента в массиве"""
     try:
         index = arr.index(v)
-    except:
+    except ValueError:
         index = -1
     return index
 
@@ -93,44 +97,42 @@ def padrToMax(arr):
 
 def isInArray(arr, v) -> bool:
     """Проверяет наличие элемента в массиве"""
-    return indexInArr(arr, v) > 0
+    return v in arr
 
 
 def isInArrayByContains(arr, v) -> bool:
     """Проверяет наличие жлемента в массиве по принципу 'строка содержит'"""
-    return len(list(filter(lambda item: v in item, arr))) > 0
+    return any(v in a for a in arr)
 
 
-def maxInArr(arr, funcForCalcMax=None):
+def maxInArr(arr, funcForCalcMax=lambda x: x):
     """Максимальное значение"""
-    if (funcForCalcMax == None):
-        return max(arr)
-    return max([funcForCalcMax(item) for item in arr])
+    return max(funcForCalcMax(item) for item in arr)
 
 
-def minInArr(arr, funcForCalcMax=None):
+def minInArr(arr, funcForCalcMax=lambda x: x):
     """Минимальное значение"""
-    if (funcForCalcMax == None):
-        return min(arr)
-    return min([funcForCalcMax(item) for item in arr])
+    return min(funcForCalcMax(item) for item in arr)
 
 
-def meanInArr(arr, funcForCalcMean=None):
+def meanInArr(arr, funcForCalcMean=lambda x: x):
     """Среднее значение"""
-    if funcForCalcMean == None:
-        return statistics.mean(arr)
     if not arr:
         return 0
-    return sum([funcForCalcMean(item) for item in arr]) / len(arr)
+    return sum(funcForCalcMean(item) for item in arr) / len(arr)
 
 
-def swap(arr):
+def swap(arr: List) -> List:
     """Перевернуть массив"""
     return list(reversed(arr))
 
 
 def first(arr):
     """Первый элемент"""
+
+    # TODO: почему так? Я бы написал просто arr[0]. Во-первых преобразование к массиву — задача вызывающего кода,
+    # TODO: а если arr и так массив, то это только потратить время и память, во-вторых выбросится стандартная
+    # TODO: IndexError. Это понтнее, чем городить собственные exception
     if not arr:
         raise NotFoundException()
     return list(arr)[0]
@@ -138,6 +140,8 @@ def first(arr):
 
 def last(arr):
     """Последний элемент"""
+
+    # TODO: аналогично предыдущей
     if not arr:
         raise NotFoundException()
     return list(arr)[-1]
@@ -145,41 +149,33 @@ def last(arr):
 
 def next(arr, fromElement):
     """Следующий элемент от заданного"""
-    isFound = False
-    for el in arr:
-        if el == fromElement:
-            isFound = True
-            continue
-        if isFound:
-            return el
-    raise NotFoundException()
+
+    # TODO: перекрывает название стандартной функции next. Так нехорошо делать.
+    i = arr.index(fromElement)
+    return arr[i + 1]
 
 
 def prev(arr, fromElement):
     """Предыдущий элемент от заданного"""
-    prevElement = None
-    for el in arr:
-        if el == fromElement:
-            if prevElement == None:
-                raise NotFoundException()
-            return prevElement
-        prevElement = el
-    raise NotFoundException()
+    i = arr.index(fromElement)
+    return arr[i - 1]
 
 
 def getFilteredArr(arr, filterFunc):
     """Отфильтрованный массив"""
+    # TODO: [e for e in arr if filterFunc(e)] — по моему это более читаемо, но это субъективно
+
     return list(filter(filterFunc, arr))
 
 
 def isAllEmpty(arr):
-    """Все ли элементы пустые"""
-    return len(getFilteredArr(arr, lambda x: not StrTools.empty(x))) == 0
+    """ Все ли элементы пустые """
+    return all(StrTools.empty(e) for e in arr)
 
 
 def size(arr, filterFunc=None):
     """Количество элементов, удовлетворяющих фильтру"""
-    if filterFunc == None:
+    if filterFunc is None:
         return len(arr)
     return len(getFilteredArr(arr, filterFunc))
 

@@ -3,7 +3,7 @@ import configparser
 from tools.db import Db
 
 config = configparser.ConfigParser()
-config.read('D:\Projects\Python\LibTestser\setup.conf')
+config.read(r'D:\Projects\Python\testing_python\setup.conf')
 
 def getDbase():
     return config['dbase']['db']

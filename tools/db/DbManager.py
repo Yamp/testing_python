@@ -64,7 +64,7 @@ if __name__ == '__main__':
     print(config.getSqliteParams())
 
     with DbConnection() as conn, DbCursor(conn) as cursor:
-        sql = 'SELECT * FROM docs order by 2 limit 10'
+        sql = 'SELECT f_num_doc, f_date_doc FROM docs order by 2 limit 10'
         cursor.execute(sql)
         records = cursor.fetchall()
 

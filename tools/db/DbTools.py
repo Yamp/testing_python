@@ -26,7 +26,7 @@ def _executeCommand(conn, cursor, isCommit, sql):
 
 if __name__ == '__main__':
     try:
-        data = {"f_num_doc": 'Б1', "f_date_doc": RusDate.presentDate(), "f_sclad": 1, "f_is_ready": True}
+        data = {"f_num_doc": 'Б3', "f_date_doc": RusDate.presentDate(), "f_sclad": 3, "f_is_ready": True}
         sql = SqlTools.sqlForInsert(data, "docs")
         executeCommand(sql)
     except Exception as e:

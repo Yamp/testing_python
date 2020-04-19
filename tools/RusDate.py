@@ -33,10 +33,11 @@ class RusDate:
                     self.init(EMPTY_DAY, EMPTY_MONTH, EMPTY_YEAR)
 
                 self.init(int(splits[0]), int(splits[1]), int(splits[2]))
-        elif type(init_date).__name__ in ('datetime', 'date'):
+        # elif type(init_date).__name__ in ('datetime', 'date'):
+        elif isinstance(init_date, (datetime, date)):
             dtDate = init_date
             self.init(dtDate.day, dtDate.month, dtDate.year)
-        elif type(init_date).__name__ == 'RusDate':
+        elif isinstance(init_date, type(self)):
             rdDate = init_date
             self.init(rdDate.d.day, rdDate.d.month, rdDate.d.year)
 

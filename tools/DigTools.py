@@ -9,31 +9,6 @@ from tools import StrTools, DigToText
 THOUSAND_SEPARATOR = " "
 
 
-def roundDo(value: float, valRound: float) -> float:
-    """Округлить до (например 0.01)"""
-    # TODO: предлагаю сделать valRound строкой, чтобы избежать проблемы с float.
-    # TODO: Или можно использовать Rational для дробей
-
-    if valRound == 0:
-        valRound = 0.01
-
-    return round(valRound, decLength(value))
-
-
-def decLength(dd: float) -> int:
-    """ Длина дробной части """
-    # TODO: Нужно что-то придумать с ошибками округления. 0.1 легко превращается в 0.099999999999999999...
-    # TODO: в твоей реализации тоже была эта проблема. Лучше этой функцией вообще не пользоваться
-
-    # Note that Decimal.from_float(0.1) is not the same as Decimal('0.1').
-    # Since 0.1 is not exactly representable in binary floating point, the
-    # value is stored as the nearest representable value which is
-    # 0x1.999999999999ap-4.  The exact equivalent of the value in decimal
-    # is 0.1000000000000000055511151231257827021181583404541015625.
-
-    return -Decimal(dd).as_tuple().exponent
-
-
 def strVal(value: float, dec: int = -1, n: int = 0) -> str:
     """
     Привести число к строке
@@ -43,7 +18,12 @@ def strVal(value: float, dec: int = -1, n: int = 0) -> str:
     :return:
     """
     # TODO: почитай, это полезно https://docs.python.org/3.4/library/string.html#format-string-syntax
-    return f'{value:{n}.{dec}}f'
+    d = value if dec == -1 else round(value, dec)
+    s = str(d)
+    if n > 0:
+        s = StrTools.padl(s, n)
+    return s
+    # return f'{value:{n}10.{dec}}f'
 
 
 def strFlexible(value: float, dec: int = 2, isEmptyIfZero: bool = False) -> str:
@@ -102,17 +82,15 @@ def separateDigit(value: float) -> str:
     # https://stackoverflow.com/questions/13362121/convert-python-strings-into-floats-explicitly-using-the-comma-or-the-point-as-se
     # https://stackoverflow.com/questions/1823058/how-to-print-number-with-commas-as-thousands-separators
 
-    locale.setlocale(locale.LC_ALL, '')
-
+    # locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+    #
     # return f'{value:n}'
     # return locale.format_string("%.3f", value, grouping=True, monetary=True)
-    return locale.format_string("%.f", value, grouping=True, monetary=True)
+    # return locale.format_string("%.f", value, grouping=True, monetary=True)
+    return '{:,}'.format(value).replace(',', THOUSAND_SEPARATOR)
 
 
 if __name__ == '__main__':
-    print(f'{decLength(123)=}')
-    print(f'{decLength(123.45678)=}')
-    print(f'{roundDo(123.45678, 0.01)=}')
     print(f'{strVal(123.45678, 2)=}')
     print(f'{strFlexible(123.45678, 2)=}')
     print(f'{strFlexible(123.45678, 0)=}')
@@ -122,5 +100,6 @@ if __name__ == '__main__':
     print(f'{between(100, 90, 110)=}')
     print(f'{commaToDot("123,456")=}')
     print(f'{isEven(4)=}')
+    print(f'{isEven(3)=}')
     print(f'{dig_to_text(105254.24)=}')
     print(f'{separateDigit(105254.24)=}')

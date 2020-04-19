@@ -67,14 +67,14 @@ def ltrim(s: str) -> str:
     return s.lstrip()
 
 
-def trim(str: str) -> str:
+def trim(s: str) -> str:
     """ Убрать хвостовые и лидирующие пробелы """
-    return str.strip()
+    return s.strip()
 
 
-def gripe(str: str) -> str:
+def gripe(s: str) -> str:
     """убрать все пробелы"""
-    return str.replace(' ', '')
+    return s.replace(' ', '')
 
 
 def charone(s: str) -> str:

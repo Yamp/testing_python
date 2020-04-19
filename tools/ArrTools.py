@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Set, Dict, Any
 
 from tools import StrTools
 import statistics
@@ -29,10 +29,9 @@ def arrToStrArr(arr, funcForStr=None):
     return [f(item) for item in arr]
 
 
-def strArrToDigArr(arr: List[str]) -> List[int]:
+def strArrToDigArr(arr: List[str]) -> List[Any]:
     """Массив строк из чисел привести к массиву чисел"""
-    # TODO: использовать eval — плохая идея
-    return [int(item) for item in arr]
+    return [json.loads(item) for item in arr]
 
 
 def strArrFromString(s: str, sep: str = ','):
@@ -42,7 +41,7 @@ def strArrFromString(s: str, sep: str = ','):
 
 def digArrFromString(s: str, sep: str = ','):
     """Массив чисел от строки, в которой значения перечислены через разделитель"""
-    return [int(item) for item in s.split(sep)]
+    return [json.loads(item) for item in s.split(sep)]
 
 
 def maxLineLength(arr) -> int:
@@ -151,12 +150,14 @@ def next(arr, fromElement):
     """Следующий элемент от заданного"""
 
     # TODO: перекрывает название стандартной функции next. Так нехорошо делать.
+    arr = list(arr)
     i = arr.index(fromElement)
     return arr[i + 1]
 
 
 def prev(arr, fromElement):
     """Предыдущий элемент от заданного"""
+    arr = list(arr)
     i = arr.index(fromElement)
     return arr[i - 1]
 

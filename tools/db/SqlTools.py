@@ -23,10 +23,11 @@ def forSql(value, nullIfZero=False) -> str:
     elif type(value).__name__ == 'RusDate':
         if value.empty():
             return "null"
-        return "to_date('" + str(value.getYear()) + '-' + StrTools.padl(str(value.getMonth()), 2,
-                                                                        '0') + '-' + StrTools.padl(str(value.getDay()),
-                                                                                                   2,
-                                                                                                   '0') + "', 'YYYY-MM-DD')"
+        return value.d
+        # return "to_date('" + str(value.getYear()) + '-' + StrTools.padl(str(value.getMonth()), 2,
+        #                                                                 '0') + '-' + StrTools.padl(str(value.getDay()),
+        #                                                                                            2,
+        #                                                                                            '0') + "', 'YYYY-MM-DD')"
 
 
 def toBetween(field: str, valFrom, valTo) -> str:

@@ -59,6 +59,9 @@ class RusDate:
         """Текущая дата"""
         return RusDate(datetime.now())
 
+    def forSql(self):
+        return self.d
+
     def __str__(self) -> str:
         return self.toViewString()
 

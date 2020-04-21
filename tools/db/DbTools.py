@@ -271,5 +271,7 @@ if __name__ == '__main__':
             'f_is_ready': 1
         }
         update('docs', fields, 11)
+        id = 10
+        update('docs', fields, f'f_id = {(id + 1)}')
     except Exception as e1:
         print(str(e1))

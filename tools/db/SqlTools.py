@@ -87,6 +87,8 @@ def sqlWithValuesForUpdate(table: str, fieldsWithValues: dict, where: Any = '') 
     """
     if isinstance(where, int):
         where = f'where f_id={where}'
+    else:
+        where = f'where {where}'
     join = ','.join([k + '=%s' for k in fieldsWithValues.keys()])
     sql = f'update {table} set {join} {where}'
     values = [forParam(x) for x in fieldsWithValues.values()]

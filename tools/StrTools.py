@@ -21,21 +21,16 @@ def empty(s: str) -> bool:
 
 def notEmpty(s: str) -> bool:
     """ Проверка на пустую строку """
-
-    # TODO: почему бы не писать просто not empty(str)?
     return not empty(s)
 
 
 def left(s: str, n: int) -> str:
     """ return Левая часть строки """
-
-    # TODO: проще прямо так и писать в коде...
     return s[:n]
 
 
 def right(s: str, n: int) -> str:
     """ return Правая часть строки """
-
     return s[-n:]
 
 

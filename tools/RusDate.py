@@ -59,7 +59,13 @@ class RusDate:
         """Текущая дата"""
         return RusDate(datetime.now())
 
-    def forSql(self):
+    def forSql(self, asString: bool = False):
+        if asString:
+            return "to_date('" + str(self.getYear()) \
+                   + '-' + StrTools.padl(str(self.getMonth()), 2, '0') \
+                   + '-' + StrTools.padl(str(self.getDay()), 2, '0') + "', 'YYYY-MM-DD')"
+        if self.empty():
+            return None
         return self.d
 
     def __str__(self) -> str:
@@ -194,7 +200,7 @@ class RusDate:
     @staticmethod
     def getArrBetween(dateFrom, dateTo):
         """Возвращает массив дат между датами"""
-        return [dateFrom + x for x in range((dateTo-dateFrom) + 1)]
+        return [dateFrom + x for x in range((dateTo - dateFrom) + 1)]
 
     @staticmethod
     def max(*dates):

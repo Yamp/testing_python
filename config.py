@@ -1,20 +1,23 @@
 import configparser
 
-from tools.db import Db
+from tools.db import db
 
 config = configparser.ConfigParser()
 config.read(r'D:\Projects\Python\testing_python\setup.conf')
 
-def getDbase():
+
+def dbase():
     return config['dbase']['db']
 
-def connQuantity():
+
+def conn_quantity():
     return int(config['dbase']['connections'])
 
-def getPostgresParams():
+
+def postgres_params():
     p = config['Postgresql']
-    return Db.Postgres(p['host'], p['dbname'], p['user'], p['password'])
+    return db.Postgres(p['host'], p['dbname'], p['user'], p['password'])
 
-def getSqliteParams():
-    return Db.Sqlite(config['Sqlite']['database'])
 
+def sqlite_params():
+    return db.Sqlite(config['Sqlite']['database'])

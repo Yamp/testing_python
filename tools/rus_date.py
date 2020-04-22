@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 import pytils as pytils
 
-from tools import ArrTools, StrTools
+from tools import arrtools, strtools
 from tools.exceptions import NotFoundException
 
 EMPTY_YEAR = 1900
@@ -24,22 +24,22 @@ class RusDate:
         :param init_date: может быть строка '15/01/2000', datetime, date, RusDate
         """
         if isinstance(init_date, str):
-            strDate = init_date
-            if StrTools.empty(strDate):
+            str_date = init_date
+            if strtools.empty(str_date):
                 self.init(EMPTY_DAY, EMPTY_MONTH, EMPTY_YEAR)
             else:
-                splits = re.split('[./-]', strDate)
-                if ArrTools.isAllEmpty(splits):
+                splits = re.split('[./-]', str_date)
+                if arrtools.is_all_empty(splits):
                     self.init(EMPTY_DAY, EMPTY_MONTH, EMPTY_YEAR)
 
                 self.init(int(splits[0]), int(splits[1]), int(splits[2]))
         # elif type(init_date).__name__ in ('datetime', 'date'):
         elif isinstance(init_date, (datetime, date)):
-            dtDate = init_date
-            self.init(dtDate.day, dtDate.month, dtDate.year)
+            dt_date = init_date
+            self.init(dt_date.day, dt_date.month, dt_date.year)
         elif isinstance(init_date, type(self)):
-            rdDate = init_date
-            self.init(rdDate.d.day, rdDate.d.month, rdDate.d.year)
+            rd_date = init_date
+            self.init(rd_date.d.day, rd_date.d.month, rd_date.d.year)
 
     def init(self, day, month, year):
         if year < 100:
@@ -50,29 +50,29 @@ class RusDate:
         self.d = datetime(year, month, day)
 
     @staticmethod
-    def emptyDate():
+    def empty_date():
         """Пустая дата"""
         return RusDate("")
 
     @staticmethod
-    def presentDate():
+    def present_date():
         """Текущая дата"""
         return RusDate(datetime.now())
 
-    def forSql(self, asString: bool = False):
-        if asString:
-            return "to_date('" + str(self.getYear()) \
-                   + '-' + StrTools.padl(str(self.getMonth()), 2, '0') \
-                   + '-' + StrTools.padl(str(self.getDay()), 2, '0') + "', 'YYYY-MM-DD')"
+    def for_sql(self, as_string: bool = False):
+        if as_string:
+            return "to_date('" + str(self.get_year()) \
+                   + '-' + strtools.padl(str(self.get_month()), 2, '0') \
+                   + '-' + strtools.padl(str(self.get_day()), 2, '0') + "', 'YYYY-MM-DD')"
         if self.empty():
             return None
         return self.d
 
     def __str__(self) -> str:
-        return self.toViewString()
+        return self.to_view()
 
     def __repr__(self) -> str:
-        return self.toViewString()
+        return self.to_view()
 
     def __add__(self, days):
         return RusDate(self.d + timedelta(days=days))
@@ -101,106 +101,106 @@ class RusDate:
         """true, если дата пустая"""
         return self.d.day == EMPTY_DAY and self.d.month == EMPTY_MONTH and self.d.year == EMPTY_YEAR
 
-    def toViewString(self, isFullYear: bool = True, delim: str = '/'):
+    def to_view(self, is_fill_year: bool = True, delim: str = '/'):
         """Представлени даты типа 15/02/2020"""
         if self.empty():
-            return "  " + delim + "  " + delim + "    " if isFullYear else "  " + delim + "  " + delim + "  "
-        day = StrTools.padl(str(self.d.day), 2, '0')
-        month = StrTools.padl(str(self.d.month), 2, '0')
-        strYear = str(self.d.year)
-        year = strYear if isFullYear else strYear[2:]
+            return "  " + delim + "  " + delim + "    " if is_fill_year else "  " + delim + "  " + delim + "  "
+        day = strtools.padl(str(self.d.day), 2, '0')
+        month = strtools.padl(str(self.d.month), 2, '0')
+        str_year = str(self.d.year)
+        year = str_year if is_fill_year else str_year[2:]
         return day + delim + month + delim + year
 
-    def toDDMM(self, delim: str = ''):
+    def to_ddmm(self, delim: str = ''):
         """Предсавление даты типа 1520"""
         if self.empty():
             return '  ' + delim + '  '
-        day = StrTools.padl(str(self.d.day), 2, '0')
-        month = StrTools.padl(str(self.d.month), 2, '0')
+        day = strtools.padl(str(self.d.day), 2, '0')
+        month = strtools.padl(str(self.d.month), 2, '0')
         return day + delim + month
 
-    def toRusString(self):
+    def to_rus_str(self):
         """Предсавление даты типа 15 февраля 2020 г."""
         return pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=self.d) + " г."
 
-    def begOfMonth(self):
+    def beg_month(self):
         """Начало месяца"""
-        d = RusDate.emptyDate()
+        d = RusDate.empty_date()
         d.init(1, self.d.month, self.d.year)
         return d
 
-    def endOfMonth(self):
+    def end_month(self):
         """Конец месяца"""
         d = datetime.now()
         next_month = d.replace(day=28, month=self.d.month, year=self.d.year) + timedelta(days=4)
         d = next_month - timedelta(days=next_month.day)
         return RusDate(d)
 
-    def begOfWeek(self):
+    def beg_week(self):
         """Начало недели"""
         d = datetime.now()
         d = d.replace(day=self.d.day, month=self.d.month, year=self.d.year)
         d = d - timedelta(days=d.isoweekday() % 7 - 1)
         return RusDate(d)
 
-    def endOfWeek(self):
+    def end_week(self):
         """Конец недели"""
         d = datetime.now()
         d = d.replace(day=self.d.day, month=self.d.month, year=self.d.year)
         d = d + timedelta(days=6 - d.weekday())
         return RusDate(d)
 
-    def dayOfWeek(self):
+    def day_week(self) -> int:
         """Номер дня недели"""
         return self.d.isoweekday()
 
-    def dayOfWeekRus(self, isShort=True):
+    def day_week_rus(self, is_short=True) -> str:
         """День недели по русски"""
-        return pytils.dt.ru_strftime(u"%" + ('a' if isShort else 'A'), inflected=True, date=self.d)
+        return pytils.dt.ru_strftime(u"%" + ('a' if is_short else 'A'), inflected=True, date=self.d)
 
-    def monthRus(self, isShort=False, inflected=False):
-        return pytils.dt.ru_strftime(u"%" + ('b' if isShort else 'B'), inflected=inflected, date=self.d)
+    def month_rus(self, is_short=False, inflected=False) -> str:
+        return pytils.dt.ru_strftime(u"%" + ('b' if is_short else 'B'), inflected=inflected, date=self.d)
 
-    def begOfYear(self):
+    def beg_year(self):
         """Начало года"""
-        d = RusDate.emptyDate()
+        d = RusDate.empty_date()
         d.init(1, 1, self.d.year)
         return d
 
-    def endOfYear(self):
+    def end_year(self):
         """Конец года"""
-        d = RusDate.emptyDate()
+        d = RusDate.empty_date()
         d.init(31, 12, self.d.year)
         return d
 
-    def addMonth(self, monthes):
+    def add_month(self, monthes):
         """Добавить месяц"""
         return RusDate(self.d + relativedelta(months=monthes))
 
-    def addYear(self, years):
+    def add_year(self, years):
         """Добавить год"""
-        return self.addMonth(years * 12)
+        return self.add_month(years * 12)
 
-    def getDay(self) -> int:
+    def get_day(self) -> int:
         """Возвращает день"""
         return self.d.day
 
-    def getMonth(self) -> int:
+    def get_month(self) -> int:
         "Возвращает номер месяца"
         return self.d.month
 
-    def getYear(self) -> int:
+    def get_year(self) -> int:
         "Возращает год"
         return self.d.year
 
-    def isBetween(self, dateFrom, dateTo) -> bool:
+    def is_between(self, date_from, date_to) -> bool:
         """true, если между датами"""
-        return dateFrom <= self <= dateTo
+        return date_from <= self <= date_to
 
     @staticmethod
-    def getArrBetween(dateFrom, dateTo):
+    def get_arr_between(date_from, date_to):
         """Возвращает массив дат между датами"""
-        return [dateFrom + x for x in range((dateTo - dateFrom) + 1)]
+        return [date_from + x for x in range((date_to - date_from) + 1)]
 
     @staticmethod
     def max(*dates):
@@ -208,9 +208,9 @@ class RusDate:
         if not dates:
             raise NotFoundException()
         try:
-            return ArrTools.last(sorted(*dates))
+            return arrtools.last(sorted(*dates))
         except:
-            return ArrTools.last(sorted(dates))
+            return arrtools.last(sorted(dates))
 
     @staticmethod
     def min(*dates):
@@ -218,17 +218,17 @@ class RusDate:
         if not dates:
             raise NotFoundException()
         try:
-            return ArrTools.first(sorted(*dates))
+            return arrtools.first(sorted(*dates))
         except:
-            return ArrTools.first(sorted(dates))
+            return arrtools.first(sorted(dates))
 
 
 if __name__ == '__main__':
     print(RusDate('15/04/20'))
     print(RusDate(RusDate('15/04/20')))
-    print(RusDate.presentDate())
-    print(RusDate.emptyDate())
-    print(RusDate.emptyDate().empty())
+    print(RusDate.present_date())
+    print(RusDate.empty_date())
+    print(RusDate.empty_date().empty())
     print(RusDate(datetime.now()) + 5)
     print(RusDate(datetime.now()) - 5)
     print(RusDate(datetime.now()) - RusDate('10/04/20'))
@@ -244,12 +244,12 @@ if __name__ == '__main__':
     s = {RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020'),
          RusDate('05/04/2020')}
     print(sorted(s))
-    print(RusDate('12/02/19').begOfYear())
-    print(RusDate('12/02/19').endOfYear())
-    print(RusDate('12/02/19').begOfMonth())
-    print(RusDate('12/02/19').endOfMonth())
-    print(RusDate('12/02/19').begOfWeek())
-    print(RusDate('12/02/19').endOfWeek())
+    print(RusDate('12/02/19').beg_year())
+    print(RusDate('12/02/19').end_year())
+    print(RusDate('12/02/19').beg_month())
+    print(RusDate('12/02/19').end_month())
+    print(RusDate('12/02/19').beg_week())
+    print(RusDate('12/02/19').end_week())
     # print(RusDate.max({RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020')}))
     # print(RusDate.max((RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020'))))
     # print(RusDate.max([RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020')]))
@@ -258,15 +258,15 @@ if __name__ == '__main__':
     # print(RusDate.min((RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020'))))
     # print(RusDate.min([RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020')]))
     print(RusDate.min(RusDate('20/04/2020'), RusDate('15/04/2020'), RusDate('11/04/2020'), RusDate('05/04/2020')))
-    print(RusDate('12/02/19').toDDMM())
-    print(RusDate('12/02/19').toRusString())
+    print(RusDate('12/02/19').to_ddmm())
+    print(RusDate('12/02/19').to_rus_str())
     print(RusDate('12/02/19').next())
     print(RusDate('12/02/19').prev())
-    print(RusDate('31/01/19').addMonth(1))
-    print(RusDate('31/01/19').addYear(10))
+    print(RusDate('31/01/19').add_month(1))
+    print(RusDate('31/01/19').add_year(10))
     rus_date = RusDate('31/01/19')
-    print(rus_date.getDay(), rus_date.getMonth(), rus_date.getYear())
-    print((RusDate.presentDate()).dayOfWeek())
-    print(RusDate.presentDate().dayOfWeekRus(), RusDate.presentDate().dayOfWeekRus(False))
-    print(RusDate.presentDate().isBetween(RusDate("17/04/20"), RusDate("17/04/20")))
-    print(RusDate.getArrBetween(RusDate("17/04/20"), RusDate("20/04/20")))
+    print(rus_date.get_day(), rus_date.get_month(), rus_date.get_year())
+    print((RusDate.present_date()).day_week())
+    print(RusDate.present_date().day_week_rus(), RusDate.present_date().day_week_rus(False))
+    print(RusDate.present_date().is_between(RusDate("17/04/20"), RusDate("17/04/20")))
+    print(RusDate.get_arr_between(RusDate("17/04/20"), RusDate("20/04/20")))

@@ -96,13 +96,14 @@ def sql_with_values_for_update(table: str, fields_with_values: dict, id:int) -> 
        а может быть целым числом. Тогда преобразуется в f_id = 10
     """
 
-    params = {'f_id': id}
+    id_field = 'f_id'
+    params = {id_field: id}
 
     for k, v in fields_with_values.items():
         params[k] = v.for_sql() if isinstance(v, RusDate) else v
 
     update_datas = ','.join([f'{k}={{{{{k}}}}}' for k in fields_with_values.keys()])
-    sql = f'update {table} set {update_datas} where f_id = {{{{{id}}}}}'
+    sql = f'update {table} set {update_datas} where f_id = {{{{{id_field}}}}}'
 
     j = JinjaSql(param_style='pyformat')
     query, bind_params = j.prepare_query(sql, params)

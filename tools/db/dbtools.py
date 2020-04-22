@@ -189,6 +189,8 @@ def update(table: str, fields_with_values: dict, id: int, connection=None, is_co
 
 
 def _executeCommand(sql, params, conn, cursor, is_commit):
+    # print(sql)
+    # print(params)
     if params is None:
         params = ()
     try:
@@ -271,7 +273,5 @@ if __name__ == '__main__':
             'f_is_ready': 1
         }
         update('docs', fields, 11)
-        id = 10
-        update('docs', fields, f'f_id = {(id + 1)}')
     except Exception as e1:
         print(str(e1))

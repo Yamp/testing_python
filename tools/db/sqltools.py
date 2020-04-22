@@ -1,5 +1,7 @@
 from typing import List, Any
 
+from jinjasql import JinjaSql
+
 from tools import strtools
 from tools.rus_date import RusDate
 from datetime import datetime, date, timedelta
@@ -73,26 +75,38 @@ def to_not_in(field: str, *values):
 
 def sql_with_values_for_insert(table: str, fields_with_values: dict) -> (str, List):
     """Выражение для insert с параметрами для подстановки"""
+    params = {}
+
+    for k, v in fields_with_values.items():
+        params[k] = v.for_sql() if isinstance(v, RusDate) else v
+
     fields = ','.join(fields_with_values.keys())
-    values = ','.join(('%s',) * len(fields_with_values))
-    sql = f'insert into {table} ({fields}) values ({values})'
-    values = [for_param(x) for x in fields_with_values.values()]
-    return sql, values
+    values = ','.join([f"{{{{{k}}}}}" for k in fields_with_values.keys()])
+
+    sql = f'insert into {table} ({fields}) values({values})'
+
+    j = JinjaSql(param_style='pyformat')
+    query, bind_params = j.prepare_query(sql, params)
+    return query, bind_params
 
 
-def sql_with_values_for_update(table: str, fields_with_values: dict, where: Any = '') -> (str, List):
+def sql_with_values_for_update(table: str, fields_with_values: dict, id:int) -> (str, List):
     """Выражение для update с параметрами для подстановки.
        where может быть выражением типа 'f_num_doc = 34454',
        а может быть целым числом. Тогда преобразуется в f_id = 10
     """
-    if isinstance(where, int):
-        where = f'where f_id={where}'
-    else:
-        where = f'where {where}'
-    join = ','.join([k + '=%s' for k in fields_with_values.keys()])
-    sql = f'update {table} set {join} {where}'
-    values = [for_param(x) for x in fields_with_values.values()]
-    return sql, values
+
+    params = {'f_id': id}
+
+    for k, v in fields_with_values.items():
+        params[k] = v.for_sql() if isinstance(v, RusDate) else v
+
+    update_datas = ','.join([f'{k}={{{{{k}}}}}' for k in fields_with_values.keys()])
+    sql = f'update {table} set {update_datas} where f_id = {{{{{id}}}}}'
+
+    j = JinjaSql(param_style='pyformat')
+    query, bind_params = j.prepare_query(sql, params)
+    return query, bind_params
 
 
 def to_case(expr: str, when_then_pairs: dict, default):

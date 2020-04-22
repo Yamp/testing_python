@@ -179,12 +179,12 @@ def insert(table: str, fields_with_values: dict, connection=None, is_commit=True
     return next_id
 
 
-def update(table: str, fields_with_values: dict, where: Any = '', connection=None, is_commit=True):
+def update(table: str, fields_with_values: dict, id: int, connection=None, is_commit=True):
     """Обновить запись в таблице
        where может быть выражением типа 'f_num_doc = 34454',
        а может быть целым числом. Тогда преобразуется в f_id = 10
     """
-    sql, params = sqltools.sql_with_values_for_update(table, fields_with_values, where)
+    sql, params = sqltools.sql_with_values_for_update(table, fields_with_values, id)
     execute_command(sql, params, connection, is_commit)
 
 

@@ -7,6 +7,8 @@ import psycopg2
 import seaborn as sns
 import xgboost
 from sklearn.model_selection import train_test_split
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.naive_bayes import MultinomialNB
 
 from tools.db.dbtools import get_frame
 
@@ -14,6 +16,7 @@ sns.set()
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score
+from stop_words import get_stop_words
 
 
 class Ml:
@@ -21,9 +24,9 @@ class Ml:
     classes_file = dir / 'classes.pickle'
     model_file = dir / 'model_tovs.pickle'
     tovs_file = dir / 'tovs.csv'
-    stop_words = ['12', '15', '14', '150', 'кпб', '350', '5л', '60', '400мл',
-                  '300', '250', '5см', '300мл', 'на', 'мл', '10', '5сп']
+
     dbc = {'dbname': 'opt', 'user': 'opt', 'password': 'koradmin', 'host': 'srv-pg-test'}
+
     test_tov_names = ['Жираф', 'Жгут Ж1', 'Вытяжка лоролр эжлдж', 'Часы настенные', 'Тарелка керамическая',
                       'Рюмка большая 333',
                       'Коврик для сушки посуды', 'Салатник 500 мл', 'Вварная шпилька M14 x 16',
@@ -86,21 +89,22 @@ class Ml:
         # self.X = self.transform_text(self.X)
         self.y = self.tovs_frm['class_code']
 
-    def transform_text(self, text_data):
-        tfidf = TfidfVectorizer(analyzer='word', stop_words=self.stop_words)
-        X = tfidf.fit_transform(text_data)
-        return X
-        # N = 100
-        # индексы топ 10 столбцов с максимальной суммой элементов (в столбцах)
-        # idx = np.ravel(X.sum(axis=0).argsort(axis=1))[::-1][:N]
-        # top_10_words = np.array(tfidf.get_feature_names())[idx].tolist()
-        # pprint.pprint(top_10_words)
+    # def transform_text(self, text_data):
+    #     tfidf = TfidfVectorizer(analyzer='word', stop_words=self.stop_words, ngram_range=(1, 2))
+    #     X = tfidf.fit_transform(text_data)
+    #     return X
+    #     # N = 100
+    #     # индексы топ 10 столбцов с максимальной суммой элементов (в столбцах)
+    #     # idx = np.ravel(X.sum(axis=0).argsort(axis=1))[::-1][:N]
+    #     # top_10_words = np.array(tfidf.get_feature_names())[idx].tolist()
+    #     # pprint.pprint(top_10_words)
 
     def define_model(self):
-        tfidf = TfidfVectorizer(analyzer='word', stop_words=self.stop_words)
+        stop_words = get_stop_words('russian')
+        tfidf = TfidfVectorizer(analyzer='word', stop_words=stop_words, ngram_range=(1, 2))
+        self.model = make_pipeline(tfidf, MultinomialNB(alpha=0.01))
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
-        # self.model = make_pipeline(TfidfVectorizer(), MultinomialNB())
-        self.model = make_pipeline(tfidf, xgboost.XGBClassifier())
+        # self.model = make_pipeline(tfidf, OneVsRestClassifier(xgboost.XGBClassifier()))
         # self.model = xgboost.XGBClassifier()
         # self.model = make_pipeline(TfidfVectorizer(), SVC(kernel='linear', C=100))
         # self.model = make_pipeline(TfidfVectorizer(), SVC(gamma='auto'))
@@ -139,7 +143,7 @@ class Ml:
 if __name__ == '__main__':
     is_load_data_from_db = False
     is_load_model_from_file = False
-    ml = Ml(n = None)
+    ml = Ml(n=None)
     if is_load_model_from_file:
         ml.load_classes_from_file()
         ml.fit(is_load_from_file=is_load_model_from_file)

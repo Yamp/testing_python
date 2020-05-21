@@ -100,7 +100,7 @@ class Ml:
         tfidf = TfidfVectorizer(analyzer='word', stop_words=self.stop_words)
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
         # self.model = make_pipeline(TfidfVectorizer(), MultinomialNB())
-        self.model = make_pipeline(TfidfVectorizer(), xgboost.XGBClassifier())
+        self.model = make_pipeline(tfidf, xgboost.XGBClassifier())
         # self.model = xgboost.XGBClassifier()
         # self.model = make_pipeline(TfidfVectorizer(), SVC(kernel='linear', C=100))
         # self.model = make_pipeline(TfidfVectorizer(), SVC(gamma='auto'))
@@ -138,7 +138,7 @@ class Ml:
 
 if __name__ == '__main__':
     is_load_data_from_db = False
-    is_load_model_from_file = True
+    is_load_model_from_file = False
     ml = Ml(n = None)
     if is_load_model_from_file:
         ml.load_classes_from_file()

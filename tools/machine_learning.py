@@ -9,6 +9,7 @@ import xgboost
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.decomposition import PCA
 
 from tools.db.dbtools import get_frame
 
@@ -17,6 +18,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score
 from stop_words import get_stop_words
+import matplotlib.pyplot as plt
 
 
 class Ml:
@@ -24,6 +26,7 @@ class Ml:
     classes_file = dir / 'classes.pickle'
     model_file = dir / 'model_tovs.pickle'
     tovs_file = dir / 'tovs.csv'
+    stop_words = get_stop_words('russian')
 
     dbc = {'dbname': 'opt', 'user': 'opt', 'password': 'koradmin', 'host': 'srv-pg-test'}
 
@@ -89,6 +92,17 @@ class Ml:
         # self.X = self.transform_text(self.X)
         self.y = self.tovs_frm['class_code']
 
+    def show_scatter(self):
+        tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1, 2))
+        X = tfidf.fit_transform(self.X).todense()
+        pca = PCA(n_components=2).fit(X)
+        data2D = pca.transform(X)
+
+        plt.scatter(data2D[:, 0], data2D[:, 1], c=ml.y, marker='o')
+        # plt.scatter(data2D[:, 0], data2D[:, 1], c=['r' if i == 17 else 'b' for i in ml.y], marker='o')
+        plt.show()
+
+
     # def transform_text(self, text_data):
     #     tfidf = TfidfVectorizer(analyzer='word', stop_words=self.stop_words, ngram_range=(1, 2))
     #     X = tfidf.fit_transform(text_data)
@@ -100,8 +114,7 @@ class Ml:
     #     # pprint.pprint(top_10_words)
 
     def define_model(self):
-        stop_words = get_stop_words('russian')
-        tfidf = TfidfVectorizer(analyzer='word', stop_words=stop_words, ngram_range=(1, 2))
+        tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1, 2))
         self.model = make_pipeline(tfidf, MultinomialNB(alpha=0.01))
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
         # self.model = make_pipeline(tfidf, OneVsRestClassifier(xgboost.XGBClassifier()))
@@ -157,6 +170,7 @@ if __name__ == '__main__':
         ml.fit(is_load_from_file=is_load_model_from_file)
         ml.predict_for_test_data()
         ml.check_accuracy()
+        ml.show_scatter()
 
     for tov_name in ml.test_tov_names:
         pprint.pprint((tov_name, ml.predict_for_tov_name(tov_name)))

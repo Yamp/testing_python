@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.decomposition import PCA
+from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
 
 from tools.db.dbtools import get_frame
 
@@ -38,7 +39,7 @@ class Ml:
                       'Шкатулка керамическая',
                       'Кружка',
                       'Блюдо для блинов', '6/12 Набор кофейный 100мл', 'Кухонная вытяжка ELIKOR Альфа',
-                      'Изделие декоративное ', 'Молоток дверной Соня', 'Набор коробок', 'Брелок бабочка']
+                      'Изделие декоративное ', 'Молоток дверной Соня', 'Набор коробок', 'Брелок бабочка', 'Процессор']
 
     def __init__(self, n=None) -> None:
         super().__init__()
@@ -76,7 +77,7 @@ class Ml:
 
     def load_tovs_from_db(self, is_save_to_file=True):
         sql = """
-        select r.f_name tov_name, r.f_artic tov_artic, r.f_class class_code
+        select r.f_name || ' IZG' || r.f_plant || ' GRP' || r.f_group || ' PRC' || round(r.f_price, -1) tov_name, r.f_class class_code
         from rest r
         -- where r.f_cod between 0 and 50000
         """
@@ -125,7 +126,7 @@ class Ml:
         # self.model = make_pipeline(TfidfVectorizer(), RandomForestClassifier(n_estimators=100, random_state=0))
 
     def define_data(self):
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2,
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
                                                                                 random_state=0)
 
     def fit(self, is_save_to_file=True, is_load_from_file=False):
@@ -170,7 +171,7 @@ if __name__ == '__main__':
         ml.fit(is_load_from_file=is_load_model_from_file)
         ml.predict_for_test_data()
         ml.check_accuracy()
-        ml.show_scatter()
+        # ml.show_scatter()
 
     for tov_name in ml.test_tov_names:
         pprint.pprint((tov_name, ml.predict_for_tov_name(tov_name)))

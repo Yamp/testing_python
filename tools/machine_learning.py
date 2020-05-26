@@ -6,6 +6,7 @@ import pandas as pd
 import psycopg2
 import seaborn as sns
 import xgboost
+from sklearn.linear_model import Perceptron
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.naive_bayes import MultinomialNB
@@ -150,6 +151,7 @@ class Ml:
 
     def define_model(self):
         tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1, 2))
+        # self.model = make_pipeline(tfidf, Perceptron(shuffle=False))
         self.model = make_pipeline(tfidf, MultinomialNB(alpha=0.01))
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
         # self.model = make_pipeline(tfidf, OneVsRestClassifier(xgboost.XGBClassifier()))
@@ -196,7 +198,7 @@ class Ml:
 
 
 if __name__ == '__main__':
-    is_load_data_from_db = True
+    is_load_data_from_db = False
     is_load_model_from_file = False
     ml = Ml(n=None, type=Ml.cls)
     if is_load_model_from_file:

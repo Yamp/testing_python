@@ -6,12 +6,14 @@ import pandas as pd
 import psycopg2
 import seaborn as sns
 import xgboost
-from sklearn.linear_model import Perceptron
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import Perceptron, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
+from sklearn.svm import SVC, LinearSVC
 
 from tools.db.dbtools import get_frame
 
@@ -21,6 +23,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score
 from stop_words import get_stop_words
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Ml:
@@ -34,7 +37,8 @@ class Ml:
 
     dbc = {'dbname': 'opt', 'user': 'opt', 'password': 'koradmin', 'host': 'srv-pg-test'}
 
-    test_tov_names = ['Жираф', 'Жгут Ж1', 'Вытяжка лоролр эжлдж', 'Часы настенные', 'Тарелка керамическая',
+    test_tov_names = ['Жираф',
+                      'Жгут Ж1', 'Вытяжка лоролр эжлдж', 'Часы настенные', 'Тарелка керамическая',
                       'Рюмка большая 333',
                       'Коврик для сушки посуды', 'Салатник 500 мл', 'Вварная шпилька M14 x 16',
                       'Caster swivel w/o brake',
@@ -42,7 +46,10 @@ class Ml:
                       'Шкатулка керамическая',
                       'Кружка',
                       'Блюдо для блинов', '6/12 Набор кофейный 100мл', 'Кухонная вытяжка ELIKOR Альфа',
-                      'Изделие декоративное ', 'Молоток дверной Соня', 'Набор коробок', 'Брелок бабочка']
+                      'Изделие декоративное ', 'Молоток дверной Соня', 'Набор коробок', 'Брелок бабочка',
+                      'Блюдо на ножке 37см', 'Набор чайный 7/16', 'Жопа с ручкой', 'Страус в шляпе',
+                      'Банкетка Грация', 'Банкетка Груша', 'Кофе', 'Чай индийский прима'
+                      ]
 
     cls = 1
     izg = 2
@@ -109,7 +116,7 @@ class Ml:
 
     def load_tovs_from_db(self, is_save_to_file=True):
         sql = """
-        select r.f_name tov_name, r.f_class class_code, r.f_plant izgot_code, r.f_group group_code
+        select /*distinct*/ r.f_name tov_name, r.f_class class_code
         from rest r
         -- where r.f_cod between 0 and 50000
         """
@@ -151,12 +158,19 @@ class Ml:
 
     def define_model(self):
         tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1, 2))
+        # tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1,1))
+        # tfidf.fit_transform(self.X)
+        # feature_names = np.array(tfidf.get_feature_names())
+        # l = [s for s in feature_names if s[0].isdigit() ]
+        # tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words + l, ngram_range=(1,2))
         # self.model = make_pipeline(tfidf, Perceptron(shuffle=False))
+        # self.model = make_pipeline(tfidf, LinearSVC(C=1))
         self.model = make_pipeline(tfidf, MultinomialNB(alpha=0.01))
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
         # self.model = make_pipeline(tfidf, OneVsRestClassifier(xgboost.XGBClassifier()))
         # self.model = xgboost.XGBClassifier()
-        # self.model = make_pipeline(TfidfVectorizer(), SVC(kernel='linear', C=100))
+        # self.model = make_pipeline(tfidf, PCA(n_components=2), SVC(kernel='linear', C=1))
+        # self.model = make_pipeline(tfidf, TruncatedSVD(n_components=4), SVC(kernel='linear', C=1))
         # self.model = make_pipeline(TfidfVectorizer(), SVC(gamma='auto'))
         # self.model = make_pipeline(TfidfVectorizer(), DecisionTreeClassifier())
         # self.model = make_pipeline(TfidfVectorizer(), RandomForestClassifier(n_estimators=100, random_state=0))
@@ -186,20 +200,45 @@ class Ml:
         accuracy = accuracy_score(self.y_test, self.predictions)
         print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
-    def predict_for_tov_name(self, tov_name):
-        pred = self.model.predict([tov_name])
+    def predict_for_tov_name(self, tov_name, is_variants=False):
+        res = ''
+        spr = self.classes
+        if is_variants:
+            def get_code(sorted_preds, npp):
+                return self.model.classes_[sorted_preds[npp][0]]
 
-        if self.type == Ml.cls:
-            return self.classes[pred[0]]
-        elif self.type == Ml.izg:
-            return self.izgots[pred[0]]
-        elif self.type == Ml.grp:
-            return self.groups[pred[0]]
+            def get_prob(srt, npp):
+                return round(srt[npp][1] * 100, 2)
+
+            preds = self.model.predict_proba([tov_name])
+            sorted_preds = sorted(enumerate(preds[0]), key=lambda x: -x[1])
+            if self.type == Ml.cls:
+                spr = self.classes
+            elif self.type == Ml.izg:
+                spr = self.izgots
+            elif self.type == Ml.grp:
+                spr = self.groups
+
+            res = (f"{spr[get_code(sorted_preds, 0)]} -> {get_prob(sorted_preds, 0)}",
+                   f"{spr[get_code(sorted_preds, 1)]} -> {get_prob(sorted_preds, 1)}",
+                   f"{spr[get_code(sorted_preds, 2)]} -> {get_prob(sorted_preds, 2)}"
+                   )
+        else:
+            pred = self.model.predict([tov_name])
+            if self.type == Ml.cls:
+                res = self.classes[pred[0]]
+            elif self.type == Ml.izg:
+                res = self.izgots[pred[0]]
+            elif self.type == Ml.grp:
+                res = self.groups[pred[0]]
+
+        return res
+
 
 
 if __name__ == '__main__':
     is_load_data_from_db = False
-    is_load_model_from_file = False
+    is_load_model_from_file = True
     ml = Ml(n=None, type=Ml.cls)
     if is_load_model_from_file:
         ml.load_classes_from_file()
@@ -217,4 +256,4 @@ if __name__ == '__main__':
         # ml.show_scatter()
 
     for tov_name in ml.test_tov_names:
-        pprint.pprint((tov_name, ml.predict_for_tov_name(tov_name)))
+        pprint.pprint((tov_name, ml.predict_for_tov_name(tov_name, is_variants=True)))

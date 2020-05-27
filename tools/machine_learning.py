@@ -168,12 +168,12 @@ class Ml:
         self.model = make_pipeline(tfidf, MultinomialNB(alpha=0.01))
         # XGBoost - base (CatBoost - Yandex, LightGBM - Microsoft)
         # self.model = make_pipeline(tfidf, OneVsRestClassifier(xgboost.XGBClassifier()))
-        # self.model = xgboost.XGBClassifier()
+        # self.model = make_pipeline(tfidf, xgboost.XGBClassifier(n_estimators=100, random_state=0))
         # self.model = make_pipeline(tfidf, PCA(n_components=2), SVC(kernel='linear', C=1))
         # self.model = make_pipeline(tfidf, TruncatedSVD(n_components=4), SVC(kernel='linear', C=1))
         # self.model = make_pipeline(TfidfVectorizer(), SVC(gamma='auto'))
         # self.model = make_pipeline(TfidfVectorizer(), DecisionTreeClassifier())
-        # self.model = make_pipeline(TfidfVectorizer(), RandomForestClassifier(n_estimators=100, random_state=0))
+        # self.model = make_pipeline(tfidf, RandomForestClassifier(n_estimators=100, random_state=0))
 
     def define_data(self):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.3,
@@ -238,7 +238,7 @@ class Ml:
 
 if __name__ == '__main__':
     is_load_data_from_db = False
-    is_load_model_from_file = True
+    is_load_model_from_file = False
     ml = Ml(n=None, type=Ml.cls)
     if is_load_model_from_file:
         ml.load_classes_from_file()

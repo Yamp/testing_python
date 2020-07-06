@@ -118,7 +118,8 @@ class Ml:
         sql = """
         select /*distinct*/ r.f_name tov_name, r.f_class class_code
         from rest r
-        -- where r.f_cod between 0 and 50000
+         -- where r.f_group in (1, 2, 3)  
+          --where r.f_cod between 0 and 50000
         """
         self.tovs_frm = get_frame(sql, connection=self.conn)
         if is_save_to_file:
@@ -137,13 +138,18 @@ class Ml:
             self.y = self.tovs_frm['group_code']
 
     def show_scatter(self):
+        #  понижение размерности и показывает группировку на графике
         tfidf = TfidfVectorizer(analyzer='word', stop_words=Ml.stop_words, ngram_range=(1, 2))
-        X = tfidf.fit_transform(self.X).todense()
-        pca = PCA(n_components=2).fit(X)
-        data2D = pca.transform(X)
+        matrix = tfidf.fit_transform(self.X_train)
 
-        plt.scatter(data2D[:, 0], data2D[:, 1], c=ml.y, marker='o')
-        # plt.scatter(data2D[:, 0], data2D[:, 1], c=['r' if i == 17 else 'b' for i in ml.y], marker='o')
+        from matplotlib.colors import ListedColormap
+        colors = ListedColormap(['red', 'green', 'blue'])
+
+        from sklearn import manifold
+        tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
+
+        data_2d_tsne = tsne.fit_transform(matrix.toarray())
+        plt.scatter(data_2d_tsne[:, 0], data_2d_tsne[:, 1], c=self.y_train, cmap=colors)
         plt.show()
 
     # def transform_text(self, text_data):
